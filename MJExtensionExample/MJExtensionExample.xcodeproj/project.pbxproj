@@ -33,6 +33,7 @@
 		2D9CAF2E192FA6020011F500 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2D9CAF2D192FA6020011F500 /* main.m */; };
 		2D9CAF32192FA6020011F500 /* MJExtensionExample.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 2D9CAF31192FA6020011F500 /* MJExtensionExample.1 */; };
 		89568B751B1B3EAE00B1FACA /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 89568B741B1B3EAE00B1FACA /* CoreData.framework */; };
+		EF0EA4B71BE31C010083950C /* NSManagedObject+MJCoreData.m in Sources */ = {isa = PBXBuildFile; fileRef = EF0EA4B61BE31C010083950C /* NSManagedObject+MJCoreData.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -101,6 +102,8 @@
 		2D9CAF30192FA6020011F500 /* MJExtensionExample-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MJExtensionExample-Prefix.pch"; sourceTree = "<group>"; };
 		2D9CAF31192FA6020011F500 /* MJExtensionExample.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = MJExtensionExample.1; sourceTree = "<group>"; };
 		89568B741B1B3EAE00B1FACA /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		EF0EA4B51BE31C010083950C /* NSManagedObject+MJCoreData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSManagedObject+MJCoreData.h"; sourceTree = "<group>"; };
+		EF0EA4B61BE31C010083950C /* NSManagedObject+MJCoreData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSManagedObject+MJCoreData.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,6 +145,8 @@
 				2D581C831B7A291A006ACCEB /* NSObject+MJClass.m */,
 				2D4A0BF61B25615700D323A7 /* NSString+MJExtension.h */,
 				2D4A0BF71B25615700D323A7 /* NSString+MJExtension.m */,
+				EF0EA4B51BE31C010083950C /* NSManagedObject+MJCoreData.h */,
+				EF0EA4B61BE31C010083950C /* NSManagedObject+MJCoreData.m */,
 			);
 			name = MJExtension;
 			path = ../../MJExtension;
@@ -275,6 +280,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D4A0BFD1B25615700D323A7 /* NSObject+MJKeyValue.m in Sources */,
+				EF0EA4B71BE31C010083950C /* NSManagedObject+MJCoreData.m in Sources */,
 				2D306F601B5A24430069910E /* BaseObject.m in Sources */,
 				2D6CAFF91A5AA0BB00E2BA5E /* User.m in Sources */,
 				2D6CAFF61A5AA0BB00E2BA5E /* Ad.m in Sources */,

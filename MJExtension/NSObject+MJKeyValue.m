@@ -15,6 +15,7 @@
 #import "MJFoundation.h"
 #import "NSString+MJExtension.h"
 #import "NSObject+MJClass.h"
+#import "NSManagedObject+MJCoreData.h"
 
 @implementation NSObject (MJKeyValue)
 
@@ -120,7 +121,13 @@ static NSNumberFormatter *numberFormatter_;
                     value = urlArray;
                 } else {
                     // 3.字典数组-->模型数组
-                    value = [objectClass objectArrayWithKeyValuesArray:value context:context error:error];
+                    if ([typeClass isSubclassOfClass:[NSSet class]]) {
+                        value = [objectClass objectSetWithKeyValuesArray:value context:context error:error];
+                    } else if ([type isKindOfClass:[NSOrderedSet class]]) {
+                        value = [objectClass objectOrderedSetWithKeyValuesArray:value context:context error:error];
+                    } else {
+                        value = [objectClass objectArrayWithKeyValuesArray:value context:context error:error];
+                    }
                 }
             } else if (typeClass == [NSString class]) {
                 if ([value isKindOfClass:[NSNumber class]]) {
@@ -188,10 +195,8 @@ static NSNumberFormatter *numberFormatter_;
 + (instancetype)objectWithKeyValues:(id)keyValues context:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error
 {
     if (keyValues == nil) return nil;
-    if ([self isSubclassOfClass:[NSManagedObject class]] && context) {
-        return [[NSEntityDescription insertNewObjectForEntityForName:NSStringFromClass(self) inManagedObjectContext:context] setKeyValues:keyValues context:context error:error];
-    }
-    return [[[self alloc] init] setKeyValues:keyValues error:error];
+    NSObject *data =[self generateDataWithKeyValue:keyValues inContext:context error:error];
+    return [data setKeyValues:keyValues context:context error:error];
 }
 
 + (instancetype)objectWithFilename:(NSString *)filename
@@ -219,6 +224,9 @@ static NSNumberFormatter *numberFormatter_;
 }
 
 #pragma mark - 字典数组 -> 模型数组
+
+#pragma mark Array
+
 + (NSMutableArray *)objectArrayWithKeyValuesArray:(NSArray *)keyValuesArray
 {
     return [self objectArrayWithKeyValuesArray:keyValuesArray error:nil];
@@ -236,29 +244,43 @@ static NSNumberFormatter *numberFormatter_;
 
 + (NSMutableArray *)objectArrayWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error
 {
-    // 如果数组里面放的是NSString、NSNumber等数据
-    if ([MJFoundation isClassFromFoundation:self]) return [NSMutableArray arrayWithArray:keyValuesArray];
-    
-    // 如果是JSON字符串
-    keyValuesArray = [keyValuesArray JSONObject];
-    
-    // 1.判断真实性
-    MJExtensionAssertError([keyValuesArray isKindOfClass:[NSArray class]], nil, error, @"keyValuesArray参数不是一个数组");
-    
-    // 2.创建数组
-    NSMutableArray *modelArray = [NSMutableArray array];
-    
-    // 3.遍历
-    for (NSDictionary *keyValues in keyValuesArray) {
-        if ([keyValues isKindOfClass:[NSArray class]]){
-            [modelArray addObject:[self objectArrayWithKeyValuesArray:keyValues context:context error:error]];
-        } else {
-            id model = [self objectWithKeyValues:keyValues context:context error:error];
-            if (model) [modelArray addObject:model];
-        }
-    }
-    
-    return modelArray;
+    return [self objectMutableCollection:[NSMutableArray new] withKeyValuesArray:keyValuesArray context:context error:error];
+}
+
+#pragma mark Set
+
++ (NSMutableSet *)objectSetWithKeyValuesArray:(id)keyValuesArray {
+    return [self objectSetWithKeyValuesArray:keyValuesArray context:nil error:NULL];
+}
+
++ (NSMutableSet *)objectSetWithKeyValuesArray:(id)keyValuesArray error:(NSError *__autoreleasing *)error {
+    return [self objectSetWithKeyValuesArray:keyValuesArray context:NULL error:error];
+}
+
++ (NSMutableSet *)objectSetWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context {
+    return [self objectSetWithKeyValuesArray:keyValuesArray context:context error:NULL];
+}
+
++ (NSMutableSet *)objectSetWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
+    return [self objectMutableCollection:[NSMutableSet new] withKeyValuesArray:keyValuesArray context:context error:error];
+}
+
+#pragma mark OrderdSet
+
++ (NSMutableOrderedSet *)objectOrderedSetWithKeyValuesArray:(id)keyValuesArray {
+    return [self objectOrderedSetWithKeyValuesArray:keyValuesArray context:nil error:NULL];
+}
+
++ (NSMutableOrderedSet *)objectOrderedSetWithKeyValuesArray:(id)keyValuesArray error:(NSError *__autoreleasing *)error {
+    return [self objectOrderedSetWithKeyValuesArray:keyValuesArray context:nil error:error];
+}
+
++ (NSMutableOrderedSet *)objectOrderedSetWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context {
+    return [self objectOrderedSetWithKeyValuesArray:keyValuesArray context:context error:NULL];
+}
+
++ (NSMutableOrderedSet *)objectOrderedSetWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
+    return [self objectMutableCollection:[NSMutableOrderedSet new] withKeyValuesArray:keyValuesArray context:context error:error];
 }
 
 + (NSMutableArray *)objectArrayWithFilename:(NSString *)filename
@@ -344,7 +366,7 @@ static NSNumberFormatter *numberFormatter_;
             Class typeClass = type.typeClass;
             if (!type.isFromFoundation && typeClass) {
                 value = [value keyValues];
-            } else if ([value isKindOfClass:[NSArray class]]) {
+            } else if ([MJFoundation isCollectionClass:[value class]]) {
                 // 3.处理数组里面有模型的情况
                 value = [NSObject keyValuesArrayWithObjectArray:value];
             } else if (typeClass == [NSURL class]) {
@@ -418,6 +440,8 @@ static NSNumberFormatter *numberFormatter_;
     return keyValues;
 }
 #pragma mark - 模型数组 -> 字典数组
+
+#pragma mark Array
 + (NSMutableArray *)keyValuesArrayWithObjectArray:(NSArray *)objectArray
 {
     return [self keyValuesArrayWithObjectArray:objectArray error:nil];
@@ -450,19 +474,49 @@ static NSNumberFormatter *numberFormatter_;
 
 + (NSMutableArray *)keyValuesArrayWithObjectArray:(NSArray *)objectArray keys:(NSArray *)keys ignoredKeys:(NSArray *)ignoredKeys error:(NSError *__autoreleasing *)error
 {
-    // 0.判断真实性
-    MJExtensionAssertError([objectArray isKindOfClass:[NSArray class]], nil, error, @"objectArray参数不是一个数组");
-    
-    // 1.创建数组
-    NSMutableArray *keyValuesArray = [NSMutableArray array];
-    for (id object in objectArray) {
-        if (keys) {
-            [keyValuesArray addObject:[object keyValuesWithKeys:keys error:error]];
-        } else {
-            [keyValuesArray addObject:[object keyValuesWithIgnoredKeys:ignoredKeys error:error]];
-        }
-    }
-    return keyValuesArray;
+    return [self keyValuesArrayWithObjectCollection:objectArray keys:keys ignoredKeys:ignoredKeys error:error];
+}
+
+#pragma mark Set
+
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet {
+    return [self keyValuesArrayWithObjectSet:objectSet error:NULL];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet error:(NSError **)error {
+    return [self keyValuesArrayWithObjectCollection:objectSet keys:nil ignoredKeys:nil error:error];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet keys:(NSArray *)keys {
+    return [self keyValuesArrayWithObjectSet:objectSet keys:keys error:NULL];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet keys:(NSArray *)keys error:(NSError **)error {
+    return [self keyValuesArrayWithObjectCollection:objectSet keys:keys ignoredKeys:nil error:error];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet ignoredKeys:(NSArray *)ignoredKeys {
+    return [self keyValuesArrayWithObjectSet:objectSet ignoredKeys:ignoredKeys error:NULL];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet ignoredKeys:(NSArray *)ignoredKeys error:(NSError **)error {
+    return [self keyValuesArrayWithObjectCollection:objectSet keys:nil ignoredKeys:ignoredKeys error:error];
+}
+
+#pragma mark OrderSet
+
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet {
+    return [self keyValuesArrayWithObjectOrderedSet:objectOrderedSet error:NULL];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet error:(NSError **)error {
+    return [self keyValuesArrayWithObjectCollection:objectOrderedSet keys:nil ignoredKeys:nil error:error];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet keys:(NSArray *)keys {
+    return [self keyValuesArrayWithObjectOrderedSet:objectOrderedSet keys:keys error:NULL];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet keys:(NSArray *)keys error:(NSError **)error {
+    return [self keyValuesArrayWithObjectCollection:objectOrderedSet keys:keys ignoredKeys:nil error:error];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet ignoredKeys:(NSArray *)ignoredKeys {
+    return [self keyValuesArrayWithObjectOrderedSet:objectOrderedSet ignoredKeys:ignoredKeys error:NULL];
+}
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet ignoredKeys:(NSArray *)ignoredKeys error:(NSError **)error {
+    return [self keyValuesArrayWithObjectCollection:objectOrderedSet keys:nil ignoredKeys:ignoredKeys error:error];
 }
 
 #pragma mark - 转换为JSON
@@ -497,5 +551,127 @@ static NSNumberFormatter *numberFormatter_;
     }
     
     return [[NSString alloc] initWithData:[self JSONData] encoding:NSUTF8StringEncoding];
+}
+
+#pragma mark - 私有方法
+
++ (id)objectMutableCollection:(id)mutableCollection withKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context error:(NSError *__autoreleasing *)error {
+    // 如果数组里面放的是NSString、NSNumber等数据
+    if ([MJFoundation isClassFromFoundation:self]) {
+        if ([mutableCollection isKindOfClass:[NSMutableSet class]]) {
+            return [NSMutableSet setWithArray:keyValuesArray];
+        } else if ([mutableCollection isKindOfClass:[NSMutableOrderedSet class]]) {
+            return [NSMutableOrderedSet orderedSetWithArray:keyValuesArray];
+        } else {
+            return [NSMutableArray arrayWithArray:keyValuesArray];
+        }
+    }
+    
+    // 如果是JSON字符串
+    keyValuesArray = [keyValuesArray JSONObject];
+    
+    // 1.判断真实性
+    MJExtensionAssertError([keyValuesArray isKindOfClass:[NSArray class]], nil, error, @"keyValuesArray参数不是一个数组");
+    
+    // 2.遍历
+    for (NSDictionary *keyValues in keyValuesArray) {
+        if ([keyValues isKindOfClass:[NSArray class]]){
+            [mutableCollection addObject:[self objectArrayWithKeyValuesArray:keyValues context:context error:error]];
+        } else {
+            id model = [self objectWithKeyValues:keyValues context:context error:error];
+            if (model) [mutableCollection addObject:model];
+        }
+    }
+    
+    return mutableCollection;
+}
+
++ (NSMutableArray *)keyValuesArrayWithObjectCollection:(id)objectCollection keys:(NSArray *)keys ignoredKeys:(NSArray *)ignoredKeys error:(NSError *__autoreleasing *)error
+{
+    // 0.判断真实性
+    MJExtensionAssertError([MJFoundation isCollectionClass:[objectCollection class]], nil, error, @"objectArray参数不是一个容器");
+    
+    // 1.创建数组
+    NSMutableArray *keyValuesArray = [NSMutableArray array];
+    for (id object in objectCollection) {
+        if (keys) {
+            [keyValuesArray addObject:[object keyValuesWithKeys:keys error:error]];
+        } else {
+            [keyValuesArray addObject:[object keyValuesWithIgnoredKeys:ignoredKeys error:error]];
+        }
+    }
+    return keyValuesArray;
+}
+
+/**
+ *  对象初始化工厂方法，根据class生成对应的实例
+ */
++ (NSObject *)generateDataWithKeyValue:(id)keyValues inContext:(NSManagedObjectContext *)context error:(NSError **)error {
+    return [[self alloc] init];
+}
+
+@end
+
+/**
+ *  重写实例生成方法，core data对象先通过identityPropertyName查找是否包含有对应的数据，如果有，则生成该数据的实例进行更新，否则插入新数据
+ */
+@implementation NSManagedObject (MJKeyValue)
+
++ (NSObject *)generateDataWithKeyValue:(id)keyValues inContext:(NSManagedObjectContext *)context error:(NSError **)error {
+    MJExtensionAssertError([keyValues isKindOfClass:[NSDictionary class]], nil, error, @"keyValue参数不是一个NSDictionary");
+    MJExtensionAssertError(context != nil, nil, error, @"没有传递context");
+    Class aClass = self;
+    NSManagedObject *mappingObject;
+    NSArray *identityProperyNames = [aClass totalIdentityPropertyNames];
+    
+    //TODO:这里的代码和setKeyValues:的代码有重复，后期需要优化
+    //设置了唯一键值，则尝试去数据库中找到对应的数据
+    if (identityProperyNames.count > 0) {
+        NSMutableArray *predicateArray = [[NSMutableArray alloc] initWithCapacity:identityProperyNames.count];
+        [aClass enumerateProperties:^(MJProperty *property, BOOL *stop) {
+            if ([identityProperyNames containsObject:property.name]) {
+                // 1.取出属性值
+                id value;
+                NSArray *propertyKeyses = [property propertyKeysForClass:aClass];
+                for (NSArray *propertyKeys in propertyKeyses) {
+                    value = keyValues;
+                    for (MJPropertyKey *propertyKey in propertyKeys) {
+                        value = [propertyKey valueInObject:value];
+                    }
+                    if (value) break;
+                }
+                
+                // 2.值的过滤
+                id newValue = [aClass getNewValueFromObject:self oldValue:value property:property];
+                if (newValue) value = newValue;
+                
+                // 3.建立predicate
+                if (value) {
+                    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"%K == %@", property.name, value];
+                    [predicateArray addObject:predicate];
+                } else {
+                    //unique key不在keyValues中，取消遍历，直接插入新数据
+                    *stop = YES;
+                }
+            }
+        }];
+        
+        // 4. 查询对象
+        if (predicateArray.count == identityProperyNames.count) {
+            NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:NSStringFromClass(self)];
+            fetchRequest.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:predicateArray];
+            fetchRequest.fetchLimit = 1;
+            mappingObject = [context executeFetchRequest:fetchRequest error:error].firstObject;
+            if (!error) {
+                return nil;
+            }
+        }
+    }
+    
+    if (!mappingObject) {
+        mappingObject = [NSEntityDescription insertNewObjectForEntityForName:NSStringFromClass(self) inManagedObjectContext:context];
+    }
+    
+    return [mappingObject setKeyValues:keyValues context:context error:error];
 }
 @end

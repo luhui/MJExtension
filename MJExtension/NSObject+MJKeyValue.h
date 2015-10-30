@@ -111,6 +111,30 @@
 + (NSMutableArray *)keyValuesArrayWithObjectArray:(NSArray *)objectArray ignoredKeys:(NSArray *)ignoredKeys;
 + (NSMutableArray *)keyValuesArrayWithObjectArray:(NSArray *)objectArray ignoredKeys:(NSArray *)ignoredKeys error:(NSError **)error;
 
+
+/**
+ *  通过模型数组来创建一个字典数组
+ *  @param objectSet 模型数组
+ *  @return 字典数组
+ */
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet;
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet error:(NSError **)error;
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet keys:(NSArray *)keys;
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet keys:(NSArray *)keys error:(NSError **)error;
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet ignoredKeys:(NSArray *)ignoredKeys;
++ (NSMutableArray *)keyValuesArrayWithObjectSet:(NSSet *)objectSet ignoredKeys:(NSArray *)ignoredKeys error:(NSError **)error;
+
+/**
+ *  通过模型数组来创建一个字典数组
+ *  @param objectOrderedSet 模型数组
+ *  @return 字典数组
+ */
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet;
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet error:(NSError **)error;
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet keys:(NSArray *)keys;
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet keys:(NSArray *)keys error:(NSError **)error;
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet ignoredKeys:(NSArray *)ignoredKeys;
++ (NSMutableArray *)keyValuesArrayWithObjectOrderedSet:(NSOrderedSet *)objectOrderedSet ignoredKeys:(NSArray *)ignoredKeys error:(NSError **)error;
 #pragma mark - 字典转模型
 /**
  *  通过字典来创建一个模型
@@ -162,6 +186,40 @@
  */
 + (NSMutableArray *)objectArrayWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context;
 + (NSMutableArray *)objectArrayWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context error:(NSError **)error;
+
+/**
+ *  通过字典数组来创建一个模型数组
+ *  @param keyValuesArray 字典数组(可以是NSDictionary、NSData、NSString)
+ *  @return 模型数组
+ */
++ (NSMutableSet *)objectSetWithKeyValuesArray:(id)keyValuesArray;
++ (NSMutableSet *)objectSetWithKeyValuesArray:(id)keyValuesArray error:(NSError **)error;
+
+/**
+ *  通过字典数组来创建一个模型数组，
+ *  @param keyValuesArray 字典数组(可以是NSDictionary、NSData、NSString)
+ *  @param context        CoreData上下文
+ *  @return 模型数组
+ */
++ (NSMutableSet *)objectSetWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context;
++ (NSMutableSet *)objectSetWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context error:(NSError **)error;
+
+/**
+ *  通过字典数组来创建一个模型数组
+ *  @param keyValuesArray 字典数组(可以是NSDictionary、NSData、NSString)
+ *  @return 模型数组
+ */
++ (NSMutableOrderedSet *)objectOrderedSetWithKeyValuesArray:(id)keyValuesArray;
++ (NSMutableOrderedSet *)objectOrderedSetWithKeyValuesArray:(id)keyValuesArray error:(NSError **)error;
+
+/**
+ *  通过字典数组来创建一个模型数组，
+ *  @param keyValuesArray 字典数组(可以是NSDictionary、NSData、NSString)
+ *  @param context        CoreData上下文
+ *  @return 模型数组
+ */
++ (NSMutableOrderedSet *)objectOrderedSetWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context;
++ (NSMutableOrderedSet *)objectOrderedSetWithKeyValuesArray:(id)keyValuesArray context:(NSManagedObjectContext *)context error:(NSError **)error;
 
 /**
  *  通过plist来创建一个模型数组
