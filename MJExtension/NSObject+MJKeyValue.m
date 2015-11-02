@@ -91,12 +91,16 @@ static NSNumberFormatter *numberFormatter_;
         }];
     }
     NSArray *ignoredPropertyNames = [aClass totalIgnoredPropertyNames];
+    NSArray *ignoredMappingPropertyNames = [aClass totalIgnoredObjectMappingPropertyNames];
+    NSArray *objectMappingPropertyNames = [aClass totalObjectMappingPropertyNames];
         
         //通过封装的方法回调一个通过运行时编写的，用于返回属性列表的方法。
     [aClass enumerateProperties:^(MJProperty *property, BOOL *stop) {
         @try {
             // 0.检测是否被忽略
             if (allowedPropertyNames.count && ![allowedPropertyNames containsObject:property.name]) return;
+            if (objectMappingPropertyNames.count && ![objectMappingPropertyNames containsObject:property.name]) return;
+            if ([ignoredMappingPropertyNames containsObject:property.name]) return;
             if ([ignoredPropertyNames containsObject:property.name]) return;
             
             // 1.取出属性值
@@ -368,12 +372,16 @@ static NSNumberFormatter *numberFormatter_;
             return allowedPropertyNames;
         }];
     }
+    NSArray *jsonSerializationPropertyNames = [aClass totalJSONSerializationPropertyNames];
+    NSArray *ignoredJSONSerializationPropertyNames = [aClass totalIgnoredJSONSerializationPropertyNames];
     NSArray *ignoredPropertyNames = [aClass totalIgnoredPropertyNames];
     
     [aClass enumerateProperties:^(MJProperty *property, BOOL *stop) {
         @try {
             // 0.检测是否被忽略
             if (allowedPropertyNames.count && ![allowedPropertyNames containsObject:property.name]) return;
+            if (jsonSerializationPropertyNames.count && ![jsonSerializationPropertyNames containsObject:property.name]) return;
+            if ([ignoredJSONSerializationPropertyNames containsObject:property.name]) return;
             if ([ignoredPropertyNames containsObject:property.name]) return;
             if (keys.count && ![keys containsObject:property.name]) return;
             if ([ignoredKeys containsObject:property.name]) return;
@@ -697,7 +705,7 @@ static NSNumberFormatter *numberFormatter_;
             fetchRequest.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:predicateArray];
             fetchRequest.fetchLimit = 1;
             mappingObject = [context executeFetchRequest:fetchRequest error:error].firstObject;
-            if (!error) {
+            if (error) {
                 return nil;
             }
         }
@@ -713,6 +721,6 @@ static NSNumberFormatter *numberFormatter_;
 + (NSArray *)defaultAllowPropertyNamesWithContext:(NSManagedObjectContext *)context error:(NSError **)error {
     MJExtensionAssertError(context != nil, nil, error, @"传入的context为nil");
     NSEntityDescription *description = [NSEntityDescription entityForName:NSStringFromClass([self class]) inManagedObjectContext:context];
-    return [[description propertiesByName].allKeys arrayByAddingObjectsFromArray:[description relationshipsByName].allKeys];
+    return [description propertiesByName].allKeys;
 }
 @end

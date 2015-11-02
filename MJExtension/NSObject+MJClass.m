@@ -17,6 +17,10 @@ static const char MJAllowedPropertyNamesKey = '\0';
 static const char MJIgnoredPropertyNamesKey = '\0';
 static const char MJAllowedCodingPropertyNamesKey = '\0';
 static const char MJIgnoredCodingPropertyNamesKey = '\0';
+static const char MJJSONSerializationPropertyNamesKey = '\0';
+static const char MJObjectMappingPropertyNamesKey = '\0';
+static const char MJIgnoredJSONSerializationPropertyNamesKey = '\0';
+static const char MJIgnoredObjectMappingPropertyNamesKey = '\0';
 
 @implementation NSObject (MJClass)
 
@@ -107,6 +111,42 @@ static const char MJIgnoredCodingPropertyNamesKey = '\0';
 {
     return [self totalObjectsWithSelector:@selector(allowedCodingPropertyNames) key:&MJAllowedCodingPropertyNamesKey];
 }
+
+#pragma mark - 序列化白名单配置
++ (void)setupJSONSerializationPropertyNames:(MJJSONSerializationPropertyNames)jsonSerializationPropertyNames {
+    [self setupBlockReturnValue:jsonSerializationPropertyNames key:&MJJSONSerializationPropertyNamesKey];
+}
+
++ (NSMutableArray *)totalJSONSerializationPropertyNames {
+    return [self totalObjectsWithSelector:@selector(jsonSerializationPropertyNames) key:&MJJSONSerializationPropertyNamesKey];
+}
+
++ (void)setupObjectMappingPropertyNames:(MJJSONSerializationPropertyNames)objectMappingPropertyNames {
+    [self setupBlockReturnValue:objectMappingPropertyNames key:&MJObjectMappingPropertyNamesKey];
+}
+
++ (NSMutableArray *)totalObjectMappingPropertyNames {
+    return [self totalObjectsWithSelector:@selector(objectMappingPropertyNames) key:&MJObjectMappingPropertyNamesKey];
+}
+
+#pragma mark - 序列化黑名单配置
+
++ (void)setupIgnoredJSONSerializationPropertyNames:(MJIgnoredJSONSerializationPropertyNames)ignoredJSONSerializationPropertyNames {
+    [self setupBlockReturnValue:ignoredJSONSerializationPropertyNames key:&MJIgnoredJSONSerializationPropertyNamesKey];
+}
+
++ (NSMutableArray *)totalIgnoredJSONSerializationPropertyNames {
+    return [self totalObjectsWithSelector:@selector(ignoredJSONSerializaitonPropertyNames) key:&MJIgnoredJSONSerializationPropertyNamesKey];
+}
+
++ (void)setupIgnoreObjectMappingPropertyNames:(MJIgnoredObjectMappingPropertyNames)ignoredObjectMappingPropertyNames {
+    [self setupBlockReturnValue:ignoredObjectMappingPropertyNames key:&MJIgnoredObjectMappingPropertyNamesKey];
+}
+
++ (NSMutableArray *)totalIgnoredObjectMappingPropertyNames {
+    return [self totalObjectsWithSelector:@selector(ignoredObjectMappingPropertyNames) key:&MJIgnoredObjectMappingPropertyNamesKey];
+}
+
 #pragma mark - block和方法处理:存储block的返回值
 + (void)setupBlockReturnValue:(id (^)())block key:(const char *)key
 {
