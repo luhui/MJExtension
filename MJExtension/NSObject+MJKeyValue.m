@@ -365,7 +365,7 @@ static NSNumberFormatter *numberFormatter_;
     Class aClass = [self class];
     NSArray *allowedPropertyNames = [aClass totalAllowedPropertyNames];
     if ([self isKindOfClass:[NSManagedObject class]] && allowedPropertyNames.count == 0) {
-        NSManagedObject *object = self;
+        NSManagedObject *object = (NSManagedObject *)self;
         allowedPropertyNames = [aClass defaultAllowPropertyNamesWithContext:object.managedObjectContext error:error];
         //加入缓存
         [aClass setupAllowedPropertyNames:^NSArray *{
@@ -396,7 +396,7 @@ static NSNumberFormatter *numberFormatter_;
             if (!type.isFromFoundation && typeClass) {
                 if ([typeClass isSubclassOfClass:[NSManagedObject class]] && [self isKindOfClass:[NSManagedObject class]]) {
                     //core data对象关联另一个core data对象，可能存在inverse关系，需要过滤，否则造成循环调用
-                    NSManagedObject *object = self;
+                    NSManagedObject *object = (NSManagedObject *)self;
                     NSManagedObjectContext *context = object.managedObjectContext;
                     NSEntityDescription *entityDescription = [NSEntityDescription entityForName:NSStringFromClass([self class]) inManagedObjectContext:context];
                     NSRelationshipDescription *relationshipDescription = entityDescription.relationshipsByName[property.name];
