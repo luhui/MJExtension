@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.license      = "MIT"
   s.author             = { "luhui" => "luhui@cvte.com" }
   s.social_media_url   = "http://weibo.com/exceptions"
-  s.source       = { :git => "https://github.com/luhui/MJExtension.git", :tag => s.version }
+  s.source       = { :git => "https://github.com/luhui/MJExtension", :tag => s.version }
   s.source_files  = "MJExtension"
   s.requires_arc = true
 end
