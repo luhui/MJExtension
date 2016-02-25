@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name         = "CVTEExtension"
+  s.name         = "MJExtension"
   s.version      = "3.1.0-snapshot"
   s.ios.deployment_target = '6.0'
   s.osx.deployment_target = '10.8'
